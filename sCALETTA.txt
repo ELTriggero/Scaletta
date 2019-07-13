@@ -1,0 +1,92 @@
+Il progetto di Web Service si chiama Giusto.
+Il Windows Form si chiama ClientPerGiusto, ed agisce come Client.
+
+SCALETTA PER COLLEGARE UN WINDOWS FORM CLIENT AD UN WEB SERVICE
+WEB SERVICE
+1. Crea un Web Service
+2. Nuovo progetto Web app ASP.NET (.NET Framework)
+3. Template Vuoto
+4. Tasto destro sul nome della soluzione
+5. Aggiungi nuovo elemento Servizio Web (ASMX)
+6. Aggiungi using System.Data; nel asmx.cs
+7. Tasto destro su riferimenti: gestisci pacchetti NuGet 
+8. Cerca su sfoglia Microsoft.AspNet.WebApi.Client, origine pacchetto nuget.org
+9. Installa
+10. Aggiungi using Newtonsoft.Json; nel asmx.cs
+11. Ora puoi usare JsonConvert.SerializaObject(); e JsonConvert.DeserializaObject();
+12. Apri il Web.config
+13. Dentro <system.web> aggiungere <webServices>
+14. Dentro <webServices> aggiungere <protocols>
+15. Dentro <protocols> scrivere <add name="HttpGet"/>
+16. Tasto destro sul nome della soluzione
+17. Aggiungi classe nuova "DbAccess"
+18. Nella classe appena creata incollare il contenuto di "Classe DbAccess.txt"
+19. Questo permette la connessione al DataBase
+20. Aggiungere using System.Data e System.Data.SqlClient sia in questa classe che nel file asmx.cs
+21. Nella classe con i Web Method (dentro asmx.cs) crea un'istanza della classe DbAccess
+22. Crea anche un oggetto DataTable (esempio: DataTable dtUsers = new DataTable(); )
+23. Ora crea finalmente un altro Web Method (esempio: dataTableForUsers(string id) )
+24. Dentro ci passi una stringa di query (esempio: string query = "Select * From Customer Where Id = '" + id + "'"; -> quindi cerca i record in base all'id selezionato)
+25. Richiama il metodo readDataThroughAdapter(query, dtUsers) dalla classe DbAccess
+26. Salva dentro una stringa JsonConvert.SerializaObject(dtUsers); per poterlo vedere come stringhe json nel browser
+27. Vai nella classe DbAccess, alla stringa di connessione
+28. Per trovare la stringa di connessione esatta:
+vai su Strumenti -> Connetti al Database -> Microsoft SQL server -> Continua
+29. In "Server Name" si scrive il server dove è salvato il nostro database
+30. Per scoprire su quale server si apre SSMS e nelle proprietà a destra si guarda "Nome Server"
+31. Si immette quel nome e sotto si apre la lista dei database 
+-> Seleziona l'interessato -> Avanzate -> Copia la stringa di connessione
+32. Incolla la stringa in private static string strConnString = "";
+33. Manda in esecuzione il Web Service
+
+
+CLIENT
+1. Crea l'app client
+2. Nuovo progetto Windows Form App (.NET Framework)
+3. Crea un DataGridView nel Design del Form, una TextBox ed un Bottone
+4. Tasto destro su Riferimenti: aggiungi riferimento al servizio
+5. Vai su Avanzate -> Aggiungi riferimento web
+6. All'interno dell'URL mettere quello del Web Service in Run
+7. Premi la freccetta vicino e ti mostra i Web Method nel Web Service
+8. A destra dai un nome -> Aggiungi riferimento (nel Solution Explorer appaiono le Web References col nome scelto)
+9. Vai sul codice del Form e dentro la classe del Form
+10. Dentro il Form crea un istanza della classe di cui mi servono i metodi (nomeReference.NomeClasse "scegliNome" = new nomeReference.NomeClasse(); )
+11. Tasto destro su riferimenti: gestisci pacchetti NuGet 
+12. Cerca su sfoglia Microsoft.AspNet.WebApi.Client, origine pacchetto nuget.org
+13. Installa
+14. Aggiungi using Newtonsoft.Json; nel Form1.cs
+15. Ora puoi usare JsonConvert.SerializaObject(); e JsonConvert.DeserializaObject();
+16. Tasto destro su riferimenti: gestisci pacchetti NuGet 
+17. Cerca su sfoglia Microsoft.Net.Http, origine pacchetto nuget.org
+18. Installa
+19. Aggiungi using System.Net.Http e System.Net.Http.Formatting; nel Form1.cs
+20. Crea un istanza della libreria HttpClient client(esempio)
+21. Crea un nuovo metodo void (Esempio: "WebServiceSettings") in cui client.BaseAddress = new Uri("");
+22. Nell'Uri metti l'URL del browser del Web Service, con uno "/" finale
+23. Crea l'evento Form1_Load in cui metti il metodo WebServiceSettings
+24. Crea l'evento di click del bottone con dentro ad esempio: 
+HttpResponseMessage message = client.GetAsync("dataTableForUsers?id=" + textBoxCerca.Text + "").Result; -> in questo modo l'id è di input utente tramite la textBox
+25. Aggiungi anche string userJson = message.Content.ReadAsStringAsync().Result; -> Serializza il contenuto HTTP in una stringa come operazione asincrona
+26. Se metti una MessageBox.Show(userJson); ti permette di vedere in un'altra finestra di dialogo l'XML di uscita, permettendoti di "tagliare via" solo il json
+27. Crea un altro metodo che ritorna un DataTable in cui attraverso string.Split("") divide il contenuto in userJson
+-> Nell'esempio fa così:
+	private DataTable stringSplit(string userJson)
+        {
+            string[] json = userJson.Split('>');
+            string[] finalJson = json[2].Split('<');
+            DataTable dt = JsonConvert.DeserializeObject<DataTable>(finalJson[0]);
+            return dt
+        }
+28. Nell'evento btn_Click metti inoltre dataGridView1.DataSource = stringSplit(userJson); -> così la griglia si riempie
+29. Avvia l'esecuzione del Web Service e in contemporanea avvia quella del client per testare il tuo form
+
+
+DATABASE
+1. Se hai tempo/ risorse per fare un database, segui la guida sennò -> scriviti i dati fittizi sul web service (esempio: dtCountries)
+2. Procura di avere SSMS (SQL Server Management Studio) e un Server utilizzabile (Es: Sql Server 2017 Dev)
+3. Connetti al DataBase tramite Windows/chiavi di accesso -> se non puoi, vedi punto 1
+4. Crea un DataBase nuovo con i dati richiesti
+5. Popolalo a mano con query di INSERT
+6. Esegui
+
+
